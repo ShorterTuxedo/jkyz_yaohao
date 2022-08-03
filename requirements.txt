@@ -1,0 +1,12 @@
+cryptography
+selenium<4.3.0
+ddddocr
+Pillow
+requests
+numpy
+pandas
+opencv-python
+# playsound==1.2.2
+keyboard
+pyautogui
+lxml

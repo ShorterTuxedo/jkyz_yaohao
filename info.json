@@ -1,0 +1,11 @@
+{
+    "type": "证件类型",
+    "id": "证件号",
+    "dates": [所选天数（用逗号分开，0为第2天，5为第6天）],
+    "pwd": "平台密码",
+    "mysendemail": "邮箱号（建议使用网易邮箱）",
+    "emailreceivers": ["接收电邮的邮箱号（使用双引号包括，用逗号分开）"],
+    "smtppwd": "SMTP密码 （网易邮箱有SMTP访问密码）",
+    "smtphost": "SMTP服务器",
+    "smtpport": SMTP端口
+}
