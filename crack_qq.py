@@ -185,7 +185,7 @@ class Tencent:
                     pyautogui.moveTo(x=currentLoc[0]+track,y=slideLoc[0])
                 pyautogui.mouseUp()
                 time.sleep(0.2)
-                if self.browser.find_element_by_css_selector("#guideText").get_attribute("innerHTML") == "验证错误，请重试":
+                if self.browser.find_element_by_css_selector("#guideText").get_attribute("innerHTML") != "拖动下方滑块完成拼图":
                     # 验证错误
                     while True:
                         try:
