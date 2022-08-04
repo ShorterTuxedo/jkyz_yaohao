@@ -81,6 +81,7 @@ yaohaofile = None
 if not os.path.exists("yaohaodates"):
     yaohaofile = open("yaohaodates", "a")
 else:
+    yaohaofile = open("yaohaodates", "a")
     yaohaocontents = open("yaohaodates", "r").read().split("\n")
 
 def add_my_date(date):
