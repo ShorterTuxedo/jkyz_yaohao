@@ -184,13 +184,15 @@ class Tencent:
                     currentLoc = pyautogui.position()
                     pyautogui.moveTo(x=currentLoc[0]+track,y=slideLoc[0])
                 pyautogui.mouseUp()
-                if self.browser.get_element_by_css_selector("#guideText").get_attribute("innerHTML") == "验证错误，请重试":
+                time.sleep(0.2)
+                if self.browser.find_element_by_css_selector("#guideText").get_attribute("innerHTML") == "验证错误，请重试":
                     # 验证错误
                     while True:
                         try:
-                            self.browser.get_element_by_css_selector("#reload").click()
+                            self.browser.find_element_by_css_selector("#reload").click()
                             break
                         except Exception:
+                            #print(e)
                             pass
                     self.browser.switch_to.default_content()
                     self.tx_code()
