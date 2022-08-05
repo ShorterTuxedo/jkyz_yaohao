@@ -17,6 +17,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium import webdriver
 import cv2 as cv
+import numpy as np
+import pandas as pd
+import math
+from PIL import Image
 import requests
 import ddddocr
 import random
@@ -46,7 +50,7 @@ class Tencent:
             print(e)
             return False
 
-    @staticmethod
+    '''@staticmethod
     def save_target(tg_block):
         """
         保存图片
@@ -82,7 +86,7 @@ class Tencent:
             return True
         except Exception as e:
             print(e)
-            return False
+            return False'''
 
     def __init__(self, driver):
         """
@@ -149,7 +153,7 @@ class Tencent:
             except Exception:
                 continue
         print("[信息] 背景图片为 "+bk_block)
-        slideBlock = ""
+        '''slideBlock = ""
         while True:
             try:
                 slideBlock = self.browser.find_elements_by_css_selector("div[aria-label=\"拖动下方滑块完成拼图\"]")[1].value_of_css_property("background-image").split('"')[1]
@@ -160,7 +164,8 @@ class Tencent:
                 print(e)
                 continue
         print("[信息] 滑块为"+slideBlock)
-        if self.save_img(bk_block) and self.save_target(slideBlock):
+        if self.save_img(bk_block) and self.save_target(slideBlock):'''
+        if self.save_img(bk_block):
             dex = self.get_pos()
             if dex:
                 track_list = self.get_track(dex)
@@ -184,7 +189,7 @@ class Tencent:
                     currentLoc = pyautogui.position()
                     pyautogui.moveTo(x=currentLoc[0]+track,y=slideLoc[0])
                 pyautogui.mouseUp()
-                time.sleep(0.2)
+                time.sleep(0.25)
                 if self.browser.find_element_by_css_selector("#guideText").get_attribute("innerHTML") != "拖动下方滑块完成拼图":
                     # 验证错误
                     while True:
@@ -207,7 +212,61 @@ class Tencent:
 
     @staticmethod
     def get_pos():
-        target=cv.imread("target.png")
+        get_dx_median = lambda dx, x, y, w, h: np.median(dx[y: (y + h), x])
+
+        img = cv.imread("bg.jpeg", 1)
+        img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  # 转成灰度图像
+
+        _, binary = cv.threshold(img_gray, 127, 255, cv.THRESH_BINARY)  # 将灰度图像转成二值图像
+
+        contours, hierarchy = cv.findContours(binary, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)  # 查找轮廓
+
+        rect_area = []
+        rect_arc_length = []
+        cnt_infos = {}
+
+        for i, cnt in enumerate(contours):
+            if cv.contourArea(cnt) < 5000 or cv.contourArea(cnt) > 25000:
+                continue
+
+            x, y, w, h = cv.boundingRect(cnt)
+            cnt_infos[i] = {'rect_area': w * h,  # 矩形面积
+                            'rect_arclength': 2 * (w + h),  # 矩形周长
+                            'cnt_area': cv.contourArea(cnt),  # 轮廓面积
+                            'cnt_arclength': cv.arcLength(cnt, True),  # 轮廓周长
+                            'cnt': cnt,  # 轮廓
+                            'w': w,
+                            'h': h,
+                            'x': x,
+                            'y': y,
+                            'mean': np.mean(np.min(img[y:(y + h), x:(x + w)], axis=2)),  # 矩形内像素平均
+                            }
+            rect_area.append(w * h)
+            rect_arc_length.append(2 * (w + h))
+        dx = cv.Sobel(img, -1, 1, 0, ksize=5)
+
+        h, w = img.shape[:2]
+        df = pd.DataFrame(cnt_infos).T
+        df.head()
+        print(df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1))
+        print(type(df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1)))
+        df['dx_mean'] = df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1)
+        df['rect_ratio'] = df.apply(lambda v: v['rect_arclength'] / 4 / math.sqrt(v['rect_area'] + 1), axis=1)
+        df['area_ratio'] = df.apply(lambda v: v['rect_area'] / v['cnt_area'], axis=1)
+        df['score'] = df.apply(lambda x: abs(x['rect_ratio'] - 1), axis=1)
+
+        result = df.query('x>0').query('area_ratio<2').query('rect_area>5000').query('rect_area<20000').sort_values(
+            ['mean', 'score', 'dx_mean']).head(2)
+        if len(result):
+            x_left = result.x.values[0]
+            # cv.line(img, (x_left, 0), (x_left, h), color=(255, 0, 255))
+            # plt.imshow(img)
+            # plt.show()
+
+        # return result
+        return x_left
+
+        '''target=cv.imread("target.png")
         print(target.shape)
         r,target=cv.threshold(target,254,255,cv.THRESH_BINARY)
         #cv.imshow("target",target)
@@ -239,10 +298,10 @@ class Tencent:
         print("[缺口识别] 识别结果为 ", min_val, max_val, min_loc, max_loc)
         print("[MaxLoc] MaxLoc 为 ", max_loc)
         print("[MinLoc] MinLoc 为 ", min_loc)
-        return max_loc[0] * 360/552
+    return max_loc[0] * 360/552
         
 
-    '''def get_pos():
+    def get_pos():
         """
         识别缺口
         注意：网页上显示的图片为缩放图片，缩放 50% 所以识别坐标需要 0.5
@@ -286,16 +345,27 @@ class Tencent:
 
     @staticmethod
     def get_track(distance_):
+        RATIO = 507 / 670
+        BIAS = 39
+        # BIAS = 118
+        # RATIO = 1
         distance = distance_
-        distance -= 17.5
+        distance *= RATIO
+        distance -= BIAS
+        #myTrack = [distance]
+        #return myTrack
         myTrack = []
         while distance > 0:
             if distance > 20:
                 # 如果距离大于20，就让他移动快一点
-                span = random.randint(60, 70)#
+                span = random.randint(20, 30)
+                if span > distance:
+                    span = distance
             else:
                 # 快到缺口了，就移动慢一点
-                span = random.randint(45, 50)
+                span = random.randint(15, 20)
+                if span > distance:
+                    span = distance
             myTrack.append(span)
             distance -= span
         return myTrack
