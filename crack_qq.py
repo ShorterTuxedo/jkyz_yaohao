@@ -260,6 +260,9 @@ class Tencent:
         df['area_ratio'] = df.apply(lambda v: v['rect_area'] / v['cnt_area'], axis=1)
         df['score'] = df.apply(lambda x: abs(x['rect_ratio'] - 1), axis=1)
 
+
+        print("My Result Table: ",df)
+
         result = df.query('x>0').query('area_ratio<2').query('rect_area>=3450').query('rect_area<25500').sort_values(
             ['mean', 'score', 'dx_mean']).head(2)
         if len(result):
