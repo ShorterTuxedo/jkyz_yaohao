@@ -89,9 +89,9 @@ def add_my_date(date):
     global yaohaocontents
     yaohaocontents.append(date)
     if len(yaohaocontents) > 0:
-        yaohaofile.append("\n" + date)
+        yaohaofile.write("\n" + date)
     else:
-        yaohaofile.append(date)
+        yaohaofile.write(date)
     yaohaofile.close()
     yaohaofile = open("yaohaodates", "a")
 
