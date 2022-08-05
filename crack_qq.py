@@ -226,7 +226,8 @@ class Tencent:
         cnt_infos = {}
 
         for i, cnt in enumerate(contours):
-            if cv.contourArea(cnt) < 5000 or cv.contourArea(cnt) > 25000:
+            # print(cv.contourArea(cnt))
+            if (cv.contourArea(cnt) < 3450 or cv.contourArea(cnt) > 25500): #and (not (cv.contourArea(cnt) >= 3450 and cv.contourArea(cnt) <= 3455)):
                 continue
 
             x, y, w, h = cv.boundingRect(cnt)
@@ -246,8 +247,12 @@ class Tencent:
         dx = cv.Sobel(img, -1, 1, 0, ksize=5)
 
         h, w = img.shape[:2]
+        print("-"*20)
+        print(cnt_infos)
+        print("-"*20)
         df = pd.DataFrame(cnt_infos).T
         df.head()
+        print("-"*20)
         print(df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1))
         print(type(df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1)))
         df['dx_mean'] = df.apply(lambda x: get_dx_median(dx, x['x'], x['y'], x['w'], x['h']), axis=1)
@@ -255,7 +260,7 @@ class Tencent:
         df['area_ratio'] = df.apply(lambda v: v['rect_area'] / v['cnt_area'], axis=1)
         df['score'] = df.apply(lambda x: abs(x['rect_ratio'] - 1), axis=1)
 
-        result = df.query('x>0').query('area_ratio<2').query('rect_area>5000').query('rect_area<20000').sort_values(
+        result = df.query('x>0').query('area_ratio<2').query('rect_area>=3450').query('rect_area<25500').sort_values(
             ['mean', 'score', 'dx_mean']).head(2)
         if len(result):
             x_left = result.x.values[0]
