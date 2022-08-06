@@ -171,7 +171,7 @@ class Tencent:
             except Exception:
                 time.sleep(0.2)
                 while True:
-                     try:
+                    try:
                         self.browser.find_element_by_css_selector("#reload").click()
                         break
                     except Exception:
