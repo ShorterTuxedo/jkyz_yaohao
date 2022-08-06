@@ -166,7 +166,19 @@ class Tencent:
         print("[信息] 滑块为"+slideBlock)
         if self.save_img(bk_block) and self.save_target(slideBlock):'''
         if self.save_img(bk_block):
-            dex = self.get_pos()
+            try:
+                dex = self.get_pos()
+            except Exception:
+                time.sleep(0.2)
+                 while True:
+                     try:
+                        self.browser.find_element_by_css_selector("#reload").click()
+                        break
+                    except Exception:
+                        #print(e)
+                        pass
+                self.browser.switch_to.default_content()
+                return self.tx_code()
             if dex:
                 track_list = self.get_track(dex)
                 #time.sleep(0.5)
@@ -189,7 +201,7 @@ class Tencent:
                     currentLoc = pyautogui.position()
                     pyautogui.moveTo(x=currentLoc[0]+track,y=slideLoc[0])
                 pyautogui.mouseUp()
-                time.sleep(0.25)
+                time.sleep(0.2)
                 if self.browser.find_element_by_css_selector("#guideText").get_attribute("innerHTML") != "拖动下方滑块完成拼图":
                     # 验证错误
                     while True:
@@ -200,7 +212,7 @@ class Tencent:
                             #print(e)
                             pass
                     self.browser.switch_to.default_content()
-                    self.tx_code()
+                    return self.tx_code()
                 #     识别图片
                 return True
             else:
@@ -227,7 +239,7 @@ class Tencent:
 
         for i, cnt in enumerate(contours):
             # print(cv.contourArea(cnt))
-            if (cv.contourArea(cnt) < 3450 or cv.contourArea(cnt) > 25500): #and (not (cv.contourArea(cnt) >= 3450 and cv.contourArea(cnt) <= 3455)):
+            if (cv.contourArea(cnt) < 3400 or cv.contourArea(cnt) > 25500): #and (not (cv.contourArea(cnt) >= 3450 and cv.contourArea(cnt) <= 3455)):
                 continue
 
             x, y, w, h = cv.boundingRect(cnt)
@@ -263,7 +275,7 @@ class Tencent:
 
         print("My Result Table: ",df)
 
-        result = df.query('x>0').query('area_ratio<2').query('rect_area>=3450').query('rect_area<25500').sort_values(
+        result = df.query('x>0').query('area_ratio<2.1').query('rect_area>=3450').query('rect_area<25500').sort_values(
             ['mean', 'score', 'dx_mean']).head(2)
         if len(result):
             x_left = result.x.values[0]
