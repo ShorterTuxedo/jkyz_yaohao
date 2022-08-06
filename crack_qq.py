@@ -170,7 +170,7 @@ class Tencent:
                 dex = self.get_pos()
             except Exception:
                 time.sleep(0.2)
-                 while True:
+                while True:
                      try:
                         self.browser.find_element_by_css_selector("#reload").click()
                         break
