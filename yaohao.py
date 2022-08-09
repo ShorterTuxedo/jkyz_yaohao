@@ -219,6 +219,8 @@ while (not won):
                     try:
                         # writeLog(browser.execute_script('return document.querySelectorAll("input[type=\\"checkbox\\"][name=\\"date\\"]").length;'))
                         browser.execute_script('document.querySelectorAll("input[type=\\"checkbox\\"][name=\\"date\\"]")[' + str(i) + '].scrollIntoView(true);')
+                        if browser.execute_script('return (document.querySelectorAll("input[type=\\"checkbox\\"][name=\\"date\\"]")[' + str(i) + '].disabled ? "Disabled" : "Free");') == "Disabled":
+                            break
                         mydates[i].click()
                         break
                     except Exception as e:
