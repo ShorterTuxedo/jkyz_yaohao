@@ -426,7 +426,7 @@ if won:
     
     try:
         smtpObj = smtplib.SMTP_SSL(info["smtphost"], info["smtpport"])
-        stmpObj.ehlo()
+        smtpObj.ehlo()
         # stmpObj.starttls()
         smtpObj.login(info["mysendemail"], info["stmppwd"])
         smtpObj.sendmail(sender, receivers, message.as_string())
